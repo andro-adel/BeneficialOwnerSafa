@@ -1,0 +1,19 @@
+﻿@using BeneficialOwnerSafa.Components.Layout
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+@layout MainLayout
+@page "/"
+
+<h3 class="mb-4">الصفحة الرئيسية</h3>
+
+<div class="card shadow-sm p-4">
+    <p>
+        أهلاً بك في النظام 👋
+        من هنا تقدر تبدأ خدمة <strong>الإفصاح عن المستفيد الحقيقي</strong>.
+    </p>
+
+    <a href="verify-delegate" class="btn btn-primary">
+        الدخول إلى الخدمة
+    </a>
+</div>

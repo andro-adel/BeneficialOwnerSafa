@@ -11,7 +11,7 @@ namespace BeneficialOwnerSafa.Data
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        public int StatusId { get; set; }
+        public long StatusId { get; set; }
 
         [Required]
         public bool FirstStatus { get; set; }

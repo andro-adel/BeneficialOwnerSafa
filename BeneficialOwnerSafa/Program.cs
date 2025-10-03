@@ -1,6 +1,7 @@
 ﻿using BeneficialOwnerSafa.Components;
 using BeneficialOwnerSafa.Data;
 using BeneficialOwnerSafa.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,8 +14,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
            .UseSnakeCaseNamingConvention()); // مهم عشان يتماشى مع أسماء الأعمدة في MySQL
 
+// ✅ Add Authentication with Cookies
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login"; // صفحة تسجيل الدخول
+        options.AccessDeniedPath = "/AccessDenied";
+    });
+
+builder.Services.AddAuthorization();
+
 // Register Services
-builder.Services.AddScoped<BeneficialOwnerService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<RegistrationState>();
 
 // Add Razor Components
 builder.Services.AddRazorComponents()
@@ -32,6 +45,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication(); // 👈 لازم قبل UseAuthorization
+app.UseAuthorization();
 
 app.UseAntiforgery();
 

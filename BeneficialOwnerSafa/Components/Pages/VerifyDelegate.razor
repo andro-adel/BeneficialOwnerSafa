@@ -1,0 +1,90 @@
+﻿@using BeneficialOwnerSafa.Components.Layout
+@using BeneficialOwnerSafa.Data
+@using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations
+@using BeneficialOwnerSafa.Services
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+@layout MainLayout
+@page "/verify-delegate"
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+@inject RegistrationState State
+
+<h3 class="mb-4">خدمة الإفصاح عن المستفيد الحقيقي</h3>
+
+<div class="card shadow-sm p-4">
+    <EditForm Model="step1Data" OnValidSubmit="NextStep" FormName="Step1Form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <div class="mb-3">
+            <label class="form-label">نوع الجهة</label>
+            <select @bind="step1Data.Type" class="form-control">
+                <option value="">اختر نوع الجهة</option>
+                <option value="1">جمعية أهلية</option>
+                <option value="2">مؤسسة أهلية</option>
+                <option value="3">صندوق عائلة</option>
+            </select>
+            <ValidationMessage For="@(() => step1Data.Type)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">رقم الترخيص</label>
+            <input type="text" @bind="step1Data.LicenseNumber" class="form-control" />
+            <ValidationMessage For="@(() => step1Data.LicenseNumber)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">التالي</button>
+    </EditForm>
+</div>
+
+@code {
+    private Step1Data step1Data = new Step1Data();
+    private string errorMessage = string.Empty;
+
+    private async Task NextStep()
+    {
+        errorMessage = string.Empty;
+
+        if (step1Data.Type == 0)
+        {
+            errorMessage = "اختر نوع الجهة.";
+            return;
+        }
+
+        var exists = await DbContext.Nonprofits
+            .AnyAsync(n => n.TypeId == step1Data.Type && n.LicenseNumber == step1Data.LicenseNumber.Trim());
+
+        if (exists)
+        {
+            // نخزن البيانات في الـ State علشان نستخدمها في باقي الخطوات
+            State.TypeId = step1Data.Type;
+            State.LicenseNumber = step1Data.LicenseNumber.Trim();
+
+            // ننقل للخطوة التانية
+            Navigation.NavigateTo("/beneficial-owner/details");
+        }
+        else
+        {
+            errorMessage = "نوع الجهة أو رقم الترخيص غير موجودة في النظام.";
+        }
+    }
+
+    public class Step1Data
+    {
+        [Required(ErrorMessage = "اختر نوع الجهة")]
+        [Range(1, 3, ErrorMessage = "نوع الجهة غير صالح")]
+        public int Type { get; set; } = 0;
+
+        [Required(ErrorMessage = "ادخل رقم الترخيص")]
+        [MaxLength(255)]
+        public string LicenseNumber { get; set; } = string.Empty;
+    }
+}

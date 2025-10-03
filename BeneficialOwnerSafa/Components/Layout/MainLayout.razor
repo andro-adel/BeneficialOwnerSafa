@@ -1,9 +1,67 @@
-﻿@inherits LayoutComponentBase
+﻿@using BeneficialOwnerSafa.Services
+@using Microsoft.AspNetCore.Components.Authorization
 
-@Body
+@inherits LayoutComponentBase
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <header class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+        <h1 class="m-0">نظام الإفصاح عن المستفيد الحقيقي</h1>
+
+        @if (isLoggedIn)
+        {
+            <div class="d-flex align-items-center">
+                <span class="me-3">مرحباً، @Identity</span>
+                <button class="btn btn-light btn-sm"
+                        @onclick="Logout">
+                    تسجيل الخروج
+                </button>
+            </div>
+        }
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        @Body
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center p-3 mt-4">
+        © 2025 BeneficialOwnerSafa
+    </footer>
+</div>
+
+<!-- Blazor error UI -->
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool isLoggedIn = false;
+    private string Identity = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        isLoggedIn = user?.Identity?.IsAuthenticated ?? false;
+
+        if (isLoggedIn)
+        {
+            // نحاول نقرأ الاسم من الـ Claim (لو حطيناه أثناء تسجيل الدخول)
+            Identity = user.Identity?.Name ?? "مستخدم";
+        }
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/account/login", forceLoad: true);
+    }
+}

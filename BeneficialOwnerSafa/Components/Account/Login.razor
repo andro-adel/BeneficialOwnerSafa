@@ -1,0 +1,63 @@
+﻿@using BeneficialOwnerSafa.Services
+@using System.ComponentModel.DataAnnotations
+
+@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<h3>Login</h3>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" formname="LoginForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="Identity">Identity</label>
+        <InputText id="Identity" class="form-control" @bind-Value="loginModel.Identity" />
+        <ValidationMessage For="@(() => loginModel.Identity)" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+        <ValidationMessage For="@(() => loginModel.Password)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel loginModel = new(); // ثبات الـ model
+    private string? ErrorMessage;
+
+    private async Task HandleLogin()
+    {
+        // لا تعيد إنشاء loginModel هنا
+        ErrorMessage = string.Empty; // فقط لتنظيف الرسالة
+
+        var result = await AuthService.LoginAsync(loginModel.Identity, loginModel.Password);
+
+        if (result)
+        {
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        else
+        {
+            ErrorMessage = "Invalid Identity or password.";
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Identity is required")]
+        public string Identity { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+}
